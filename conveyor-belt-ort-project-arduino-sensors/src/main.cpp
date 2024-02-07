@@ -13,7 +13,17 @@ float duration, distance;
 
 int frequency = 0;
 
+
+//timer related 
+bool isTimerSet = false;
+bool cancelTimer = false;
+bool enterTimerState = false;
+unsigned long previousTime =0;
+unsigned long eventInterval = 500;
+unsigned long startMillis;  //some global variables available anywhere in the program
+
 void setup() {
+
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
@@ -28,6 +38,8 @@ void setup() {
   pinMode(echoPin, INPUT);
 
   Serial.begin(9600);
+
+  startMillis = millis();
 }
 
 void loop() {
@@ -76,4 +88,44 @@ void loop() {
   Serial.print(frequency);//printing RED color frequency
   Serial.println("  ");
   delay(100);
+}
+
+
+void sendData(){
+  
+  if(isTimerSet){
+
+    unsigned long currentTime = millis();
+    if(enterTimerState){
+      startMillis = currentTime;
+      enterTimerState = false;
+    }
+
+    if(currentTime - startMillis >= eventInterval){
+      //CreateSerialArray();
+      //Serial.write(serialArr);
+      //send here an error message
+
+      enterTimerState = true;
+      startMillis = currentTime;
+    }
+  }else{
+    
+  }
+
+}
+
+void reciveData(){
+  while(Serial.available() > 0){
+    
+    //Serial.print("Avaliable");
+
+    char inByte = Serial.read();
+    if(inByte == 'c'){
+      //CreateSerialArray();
+      //Serial.write(serialArr);
+      inByte = 'r';
+    }
+
+  }
 }
