@@ -3,25 +3,21 @@
 #define trigPin 9
 #define echoPin 10
 
-float duration, distance;
+int duration, distance;
 
 #define S0 4
 #define S1 5
 #define S2 6
 #define S3 7
 #define sensorOut 8
-char serialArr[28]; //d1234#r123g123b123
-int frequency = 0;
 
-/*
-//timer related 
-bool isTimerSet = false;
-bool cancelTimer = false;
-bool enterTimerState = false;
-unsigned long previousTime =0;
-unsigned long eventInterval = 500;
-unsigned long startMillis;  //some global variables available anywhere in the program
-*/
+char serialArr[18]; //d1234#r123g123b123
+int frequency = 0;
+int redFrequency = 0;
+int greenFrequency = 0;
+int blueFrequency = 0;
+
+void CreateSerialArray();
 
 void setup() {
 
@@ -40,7 +36,6 @@ void setup() {
 
   Serial.begin(9600);
 
-  //startMillis = millis();
 }
 
 void loop() {
@@ -61,64 +56,49 @@ void loop() {
   digitalWrite(S2,LOW);
   digitalWrite(S3,LOW);
   // Reading the output frequency
-  frequency = pulseIn(sensorOut, LOW);
+  redFrequency = pulseIn(sensorOut, LOW);
   // Printing the value on the serial monitor
-  Serial.print("R= ");//printing name
+  /*Serial.print("R= ");//printing name
   Serial.print(frequency);//printing RED color frequency
-  Serial.print("  ");
+  Serial.print("  ");*/
   //delay(100);
 
   // Setting Green filtered photodiodes to be read
   digitalWrite(S2,HIGH);
   digitalWrite(S3,HIGH);
   // Reading the output frequency
-  frequency = pulseIn(sensorOut, LOW);
+  greenFrequency = pulseIn(sensorOut, LOW);
   // Printing the value on the serial monitor
-  Serial.print("G= ");//printing name
+  /*Serial.print("G= ");//printing name
   Serial.print(frequency);//printing RED color frequency
   Serial.print("  ");
-  //delay(100);
+  //delay(100);*/
 
   // Setting Blue filtered photodiodes to be read
   digitalWrite(S2,LOW);
   digitalWrite(S3,HIGH);
   // Reading the output frequency
-  frequency = pulseIn(sensorOut, LOW);
+  blueFrequency = pulseIn(sensorOut, LOW);
   // Printing the value on the serial monitor
-  Serial.print("B= ");//printing name
+  /*Serial.print("B= ");//printing name
   Serial.print(frequency);//printing RED color frequency
   Serial.println("  ");
-  delay(100);
-}
+  delay(100);*/
 
- /*
-void sendData(){
-  
- 
-  if(isTimerSet){
-
-    unsigned long currentTime = millis();
-    if(enterTimerState){
-      startMillis = currentTime;
-      enterTimerState = false;
-    }
-
-    if(currentTime - startMillis >= eventInterval){
-      //CreateSerialArray();
-      //Serial.write(serialArr);
-      //send here an error message
-
-      enterTimerState = true;
-      startMillis = currentTime;
-    }
-  }else{
+  if(Serial.available() > 0){
     
+    char inByte = Serial.read();
+
+    if(inByte == 'c'){
+      CreateSerialArray();
+      Serial.write(serialArr);
+      inByte = 'r'; //reset inByte
+    }
   }
-
+  
 }
-*/
 
-void AddDistance(int distance, int from){
+void AddDistance(int distance, int from){ //looks like this: 10 cm: --10. 1000 cm 
   for (int i = 3; i >= 0; i--) {
 		if (distance / 10 == 0 && distance % 10 == 0)
 		{
@@ -131,19 +111,28 @@ void AddDistance(int distance, int from){
 	}
 }
 
-/*
-void reciveData(){
-  while(Serial.available() > 0){
-    
-    //Serial.print("Avaliable");
+void AddColor(int color, int arrayPosition){
+    for (int i = 3; i >= 0; i--) {
+		if (distance / 10 == 0 && distance % 10 == 0)
+		{
+			serialArr[i+arrayPosition] = '-';
+		}
+		else {
+			serialArr[i+arrayPosition] = distance % 10 + '0';
+		}
+		distance /= 10;	
+	}
+}
 
-    char inByte = Serial.read();
-    if(inByte == 'c'){
-      //CreateSerialArray();
-      //Serial.write(serialArr);
-      inByte = 'r';
-    }
-
-  }
-}*/
-
+void CreateSerialArray(){
+    //d1234r123g123b123
+  serialArr[0] = 'd';
+  AddDistance(distance, 1); //2, 3, 4 
+  serialArr[5] = 'r';
+  AddColor(redFrequency, 6); //7, 8
+  serialArr[9] = 'g';
+  AddColor(greenFrequency, 10); //11, 12
+  serialArr[13] = 'b';
+  AddColor(blueFrequency, 14); //15, 16
+  serialArr[17] = '\0'; //18 characters but the array starting from 0
+}
